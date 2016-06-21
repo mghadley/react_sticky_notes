@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta charset="utf-8" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.14.5/react.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.14.5/react-dom.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.2/marked.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.5/js/materialize.min.js"></script>
+  <link rel='stylesheet' href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.5/css/materialize.min.css" />
+  </head>
+  <body>
+    <div id='content' class='container'>
+    </div>
+    <script type='text/babel'>
+      class Index extends React.Component {
+        constructor(props) {
+          super(props);
+          this.state = { stickies: [], nextId: 0, editing: false, currentSticky: 0 };
+          this.addSticky = this.addSticky.bind(this);
+          this.stickies = this.stickies.bind(this);
+          this.deleteSticky = this.deleteSticky.bind(this);
+          this.updateSticky = this.updateSticky.bind(this);
+        }
+
+        addSticky(e) {
+          e.preventDefault();
+          let stickies = [{ title: this.refs.title.value, text: this.refs.text.value,
+                            id: this.state.nextId}, ...this.state.stickies]
+          this.refs.title.value = null;
+          this.refs.text.value = null;
+          this.setState({ stickies, nextId: ++this.state.nextId})
+        }
+
+        deleteSticky(id) {
+          let stickies = this.state.stickies;
+          let index = stickies.findIndex( x => x.id === id)
+          stickies.splice(index, 1);
+          this.setState({ stickies })
+        }
+
+        stickies() {
+          let stickies = this.state.stickies.map(sticky => {
+            return (
+              <div key={`sticky-${sticky.id}`} className="col s6 m3">
+                <div className="card yellow darken-1">
+                  <div className="card-content" style={{wordWrap: 'break-word'}}>
+                    <span className="card-title">{sticky.title}</span>
+                    <p>{sticky.text}</p>
+                  </div>
+                </div>
+                <div className="btn col m5" onClick={() => this.deleteSticky(sticky.id)}>Delete</div>
+                <div className="btn col m5 offset-m2" onClick={() => this.renderEdit(sticky.id)}>Edit</div>
+              </div>
+            )
+          });
+          return stickies;
+        }
+
+        renderEdit(id) {
+          this.setState({ currentSticky: id, editing: true})
+        }
+
+        updateSticky(e) {
+
+          e.preventDefault();
+          let id = this.state.currentSticky
+          let sticky = this.state.stickies.filter(x => x.id === id)[0];
+          sticky.title = this.refs.updateTitle.value;
+          sticky.text = this.refs.updateText.value;
+          this.setState({ editing: false});
+        } 
+
+        editView() {
+          let id = this.state.currentSticky;
+          let sticky = this.state.stickies.filter(x => x.id === id)[0];
+          return(
+            <div>
+              <div>
+                <h2>Edit this Sticky</h2>
+              </div>
+              <div>
+                <form onSubmit={this.updateSticky}>
+                  <input type='text' defaultValue={sticky.title} ref='updateTitle' />
+                  <input type='text' defaultValue={sticky.text} ref='updateText' />
+                  <input type='submit' className='btn' />
+                </form>
+              </div>
+            </div>
+          )
+        }
+
+        render() {
+          if(this.state.editing) {
+            return(this.editView())
+          } else {
+            return(
+              <div className='center'>
+                <h2>Add a new sticky</h2>
+                <form onSubmit={this.addSticky}>
+                  <input type='text' required placeholder='Title' ref='title' />
+                  <input type='text' required placeholder='Text' ref='text' />
+                  <input type='submit' className='btn' />
+                </form>
+                <div className='row'>
+                  {this.stickies()}
+                </div>
+              </div>
+            )
+          }
+        }
+      }
+
+      class Sticky extends React.Component {
+        constructor(props) {
+          super(props);
+          this.state = { style: {} }
+        }
+      }
+      ReactDOM.render(<Index />, document.getElementById('content'));
+    </script>
+  </body>
+</html>
